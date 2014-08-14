@@ -66,14 +66,18 @@
         element = section.elements[indexPath.row];
     }
 
-    if ([element.controller respondsToSelector:@selector(shouldDeleteElement:)]) {
-        if (![(QuickDialogController *)element.controller shouldDeleteElement:element]) {
-            return;
-        };
-    }
-
-    if ([section removeElementForRow:indexPath.row]){
-        [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        if ([element.controller respondsToSelector:@selector(shouldDeleteElement:)]) {
+            if (![(QuickDialogController *)element.controller shouldDeleteElement:element]) {
+                return;
+            };
+        }
+        
+        if ([section removeElementForRow:indexPath.row]){
+            [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        }
+    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+        [element performAction];
     }
 }
 
@@ -86,6 +90,13 @@
     QSection  *section = [_tableView.root getVisibleSectionForIndex: indexPath.section];
     if ([section isKindOfClass:[QSortingSection class]]){
         return ([(QSortingSection *) section canRemoveElementForRow:indexPath.row]);
+    }
+    QElement *element = [section getVisibleElementForIndex:indexPath.row];
+    if ([element isKindOfClass:[QButtonElement class]])
+    {
+        if ([((QButtonElement *)element).title hasPrefix:@"Prendre une photo"]) {
+            return YES;
+        }
     }
     return tableView.editing;
 }
